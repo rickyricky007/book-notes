@@ -20,9 +20,14 @@ const db = new pg.Client({
 db.connect();
 
 app.get("/", async (req,res) => {
-    const result = await db.query("SELECT * FROM books ORDER BY id ASC");
-    const books = result.rows;
-    res.render("index.ejs" , { books:books });
+    try{
+        const result = await db.query("SELECT * FROM books ORDER BY id ASC");
+        const books = result.rows;
+        res.render("index.ejs" , { books:books });
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Error loading books!");
+    }   
 });
 
 app.get("/new", (req, res) => {
@@ -30,37 +35,57 @@ app.get("/new", (req, res) => {
 });
 
 app.post("/add", async (req, res) => {
-    const { title, author, rating, review, isbn, date_read } = req.body;
-    await db.query(
-        "INSERT INTO books (title, author, rating, review, isbn, date_read) VALUES ($1, $2, $3, $4, $5, $6)",
-        [title, author, rating, review, isbn, date_read]
+    try{
+        const { title, author, rating, review, isbn, date_read } = req.body;
+        await db.query(
+            "INSERT INTO books (title, author, rating, review, isbn, date_read) VALUES ($1, $2, $3, $4, $5, $6)",
+            [title, author, rating, review, isbn, date_read]
     );
     res.redirect("/");
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Error adding book!");
+    }  
 });
 
 app.get("/edit/:id", async (req, res) => {
-    const id = req.params.id;
-    const result = await db.query("SELECT * FROM books WHERE id = $1", [id]);
-    const book = result.rows[0];
+    try{
+        const id = req.params.id;
+        const result = await db.query("SELECT * FROM books WHERE id = $1", [id]);
+        const book = result.rows[0];
     res.render("edit.ejs", { book: book });
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Error loading book!");
+    }    
 });
 
 app.post("/edit/:id", async (req, res) => {
-    const id = req.params.id;
-    const { title, author, rating, review, isbn, date_read } = req.body;
-    await db.query(
-        "UPDATE books SET title = $1, author = $2, rating = $3, review = $4, isbn = $5, date_read = $6 WHERE id = $7",
-        [title, author, rating, review, isbn, date_read, id]
-    );
-    res.redirect("/");
+    try{
+        const id = req.params.id;
+        const { title, author, rating, review, isbn, date_read } = req.body;
+        await db.query(
+            "UPDATE books SET title = $1, author = $2, rating = $3, review = $4, isbn = $5, date_read = $6 WHERE id = $7",
+            [title, author, rating, review, isbn, date_read, id]
+        );
+        res.redirect("/");
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Error updating book!");
+    }   
 });
 
 app.post("/delete/:id", async (req, res) => {
-    const id = req.params.id;
-    await db.query("DELETE FROM books WHERE id = $1", [id]);
-    res.redirect("/");
+    try{
+        const id = req.params.id;
+        await db.query("DELETE FROM books WHERE id = $1", [id]);
+        res.redirect("/");
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Error deleting book!");
+    }    
 });
 
 app.listen(port , () => {
-    console.log(`server is runing on the port:${port}`);
+    console.log(`server is running on the port:${port}`);
 });
